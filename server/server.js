@@ -10,10 +10,16 @@ let server = http.createServer(app);
 let io = socketIO(server);
 io.on("connection", socket => {
     console.log("New user connected.")
+    socket.emit("idSent", {
+        id: Math.random()
+    });
+    socket.on("playerDataOut", data => {
+        socket.broadcast.emit("playerDataIn", data)
+    })
     socket.on("disconnect", () => {
         console.log("User disconnected!");
     })
 })
 server.listen(port, () => {
     console.log(`Server is up on port ${port}`);
-})
+});

@@ -11,6 +11,12 @@ function Bullet({
     dir
 }) {
     return {
+        get x() {
+            return x;
+        },
+        get y() {
+            return y;
+        },
         draw() {
             ctx.fillStyle = color;
             ctx.fillRect(x, y, 3, 10);

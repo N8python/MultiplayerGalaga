@@ -1,4 +1,5 @@
 let socket = io();
+let id;
 //Client Side Only Stuff
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -12,6 +13,7 @@ const playerShip = Ship({
     y: canvas.height - galagaRed.height,
     cooldownWait: 15
 });
+const globalPlayers = {}
 const keysPressed = {
     left: false,
     right: false,
@@ -38,6 +40,22 @@ let gameInterval = setInterval(() => {
         playerShip.addBullet();
     }
     playerShip.xVel *= 0.9;
+    //Some server side stuff mixed in with the client side stuff...
+    if (id) {
+        socket.emit("playerDataOut", {
+            id,
+            x: playerShip.x,
+            y: playerShip.y,
+            bullets: playerShip.bullets,
+            cooldownWait: playerShip.cooldownWait
+        });
+    }
+    //Server-side rendering
+    Object.values(globalPlayers).forEach(player => {
+        player.draw();
+        console.log(player.bullets);
+        player.iterateBullets();
+    })
 }, 30);
 
 window.addEventListener("keydown", e => {
@@ -51,3 +69,47 @@ window.addEventListener("keyup", e => {
 socket.on("connect", () => {
     console.log("Connected to server!");
 })
+
+socket.on("playerDataIn", ({
+    id,
+    x,
+    y,
+    bullets,
+    cooldownWait
+}) => {
+    console.log(bullets);
+    if (!globalPlayers[id]) {
+        console.log(bullets);
+        globalPlayers[id] = Ship({
+            ctx,
+            canvas,
+            img: galagaRed,
+            x,
+            y,
+            cooldownWait
+        });
+        globalPlayers[id].bullets = bullets.map(bullet => Bullet({
+            ctx,
+            canvas,
+            x: bullet.x,
+            y: bullet.y,
+            color: "red",
+            dir: "up"
+        }));
+    } else {
+        globalPlayers[id].x = x;
+        globalPlayers[id].y = y;
+        globalPlayers[id].bullets = bullets.map(bullet => Bullet({
+            ctx,
+            canvas,
+            x: bullet.x,
+            y: bullet.y,
+            color: "red",
+            dir: "up"
+        }));
+    }
+})
+
+socket.on("idSent", data => {
+    id = data.id;
+});

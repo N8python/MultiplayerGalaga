@@ -20,6 +20,9 @@ function Ship({
         get y() {
             return y;
         },
+        get cooldownWait() {
+            return cooldownWait;
+        },
         set x(val) {
             if (typeof val === "number" && Number.isFinite(val)) {
                 x = val;
@@ -52,6 +55,16 @@ function Ship({
         },
         draw() {
             ctx.drawImage(img, x, y);
+        },
+        get bullets() {
+            return bullets.map(bullet => ({ x: bullet.x, y: bullet.y }));
+        },
+        set bullets(arr) {
+            if (Array.isArray(arr)) {
+                bullets = arr;
+            } else {
+                throw new TypeError("Expected array.")
+            }
         },
         addBullet(spec = {
             canvas,
