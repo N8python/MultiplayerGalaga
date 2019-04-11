@@ -74,6 +74,10 @@ function Ship({
             color: "red",
             dir: "up"
         }) {
+            if (team === "blue") {
+                spec.color = "blue";
+                spec.dir = "down";
+            }
             if (cooldown < 1) {
                 bullets.push(Bullet(spec));
                 cooldown = cooldownWait;

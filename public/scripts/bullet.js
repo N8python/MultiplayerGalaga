@@ -22,6 +22,7 @@ function Bullet({
             ctx.fillRect(x, y, 3, 10);
         },
         move() {
+            console.log(dir);
             if (dir === "up") {
                 y -= 5;
             } else if (dir === "down") {

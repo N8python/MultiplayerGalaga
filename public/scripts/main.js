@@ -1,11 +1,13 @@
 let socket = io();
 let id;
+let team = "red";
 //Client Side Only Stuff
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const galagaRed = document.querySelector("[src=\"/assets/galagaRed.png\"");
+const galagaBlue = document.querySelector("[src=\"/assets/galagaBlue.png\"");
 
-const playerShip = Ship({
+let playerShip = Ship({
     ctx,
     canvas,
     img: galagaRed,
@@ -46,6 +48,7 @@ let gameInterval = setInterval(() => {
             id,
             x: playerShip.x,
             y: playerShip.y,
+            team: team,
             bullets: playerShip.bullets,
             cooldownWait: playerShip.cooldownWait
         });
@@ -74,16 +77,15 @@ socket.on("playerDataIn", ({
     id,
     x,
     y,
+    team,
     bullets,
     cooldownWait
 }) => {
-    console.log(bullets);
     if (!globalPlayers[id]) {
-        console.log(bullets);
         globalPlayers[id] = Ship({
             ctx,
             canvas,
-            img: galagaRed,
+            img: (team === "blue") ? galagaBlue : galagaRed,
             x,
             y,
             cooldownWait
@@ -93,8 +95,8 @@ socket.on("playerDataIn", ({
             canvas,
             x: bullet.x,
             y: bullet.y,
-            color: "red",
-            dir: "up"
+            color: (team === "red") ? "red" : "blue",
+            dir: (team === "red") ? "up" : "down"
         }));
     } else {
         globalPlayers[id].x = x;
@@ -104,12 +106,29 @@ socket.on("playerDataIn", ({
             canvas,
             x: bullet.x,
             y: bullet.y,
-            color: "red",
-            dir: "up"
+            color: (team === "red") ? "red" : "blue",
+            dir: (team === "red") ? "up" : "down"
         }));
     }
 })
 
 socket.on("idSent", data => {
     id = data.id;
+    if (data.team === "blue") {
+        team = "blue";
+        playerShip = Ship({
+            ctx,
+            canvas,
+            img: galagaBlue,
+            x: canvas.width / 2 - galagaBlue.width / 2,
+            y: 0,
+            cooldownWait: 15
+        });
+    }
+});
+
+socket.on("removePlayer", ({
+    id
+}) => {
+    delete globalPlayers[id];
 });
