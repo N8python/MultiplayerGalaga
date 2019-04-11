@@ -1,14 +1,18 @@
 /**
  * Creates a ship object, which can draw to the screen
- * @param {{ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number}} param0 
+ * @param {{ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, img: HTMLImageElement, x: number, y: number, cooldownWait: number}} spec
  */
 function Ship({
     ctx,
+    canvas,
     x,
     y,
-    img
+    img,
+    cooldownWait
 }) {
     let xVel = 0;
+    let bullets = [];
+    let cooldown = 0;
     return {
         get x() {
             return x;
@@ -42,9 +46,34 @@ function Ship({
         },
         move() {
             x += xVel;
+            if (x > canvas.width - img.width || x < 0) {
+                xVel -= xVel * 2.5;
+            }
         },
         draw() {
             ctx.drawImage(img, x, y);
+        },
+        addBullet(spec = {
+            canvas,
+            ctx,
+            x: x + img.width / 2.1,
+            y: y - img.height / 5.5,
+            color: "red",
+            dir: "up"
+        }) {
+            if (cooldown < 1) {
+                bullets.push(Bullet(spec));
+                cooldown = cooldownWait;
+            }
+        },
+        iterateBullets() {
+            bullets.forEach(bullet => {
+                bullet.draw();
+                bullet.move();
+            });
+        },
+        reduceCooldown() {
+            cooldown -= 1;
         }
     }
 }

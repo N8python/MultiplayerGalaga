@@ -1,43 +1,53 @@
 let socket = io();
+//Client Side Only Stuff
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const galagaRed = document.querySelector("[src=\"/assets/galagaRed.png\"");
 
 const playerShip = Ship({
     ctx,
+    canvas,
     img: galagaRed,
     x: canvas.width / 2 - galagaRed.width / 2,
-    y: canvas.height - galagaRed.height
-})
+    y: canvas.height - galagaRed.height,
+    cooldownWait: 15
+});
 const keysPressed = {
     left: false,
-    right: false
-}
+    right: false,
+    space: false
+};
+const keyCodes = {
+    37: "left",
+    39: "right",
+    32: "space"
+};
 let gameInterval = setInterval(() => {
     ctx.fillStyle = "Black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     playerShip.draw();
     playerShip.move();
+    playerShip.iterateBullets();
+    playerShip.reduceCooldown();
     if (keysPressed.left === true) {
         playerShip.xVel -= 1;
     } else if (keysPressed.right === true) {
         playerShip.xVel += 1;
     }
+    if (keysPressed.space === true) {
+        playerShip.addBullet();
+    }
     playerShip.xVel *= 0.9;
-}, 30)
+}, 30);
 
 window.addEventListener("keydown", e => {
-    if (e.which === 37) {
-        keysPressed.left = true;
-    } else if (e.which === 39) {
-        keysPressed.right = true;
-    }
+    keysPressed[keyCodes[e.which]] = true;
 });
 
 window.addEventListener("keyup", e => {
-    if (e.which === 37) {
-        keysPressed.left = false;
-    } else if (e.which === 39) {
-        keysPressed.right = false;
-    }
+    keysPressed[keyCodes[e.which]] = false;
 });
+//Server side communication
+socket.on("connect", () => {
+    console.log("Connected to server!");
+})
