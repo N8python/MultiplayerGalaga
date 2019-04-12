@@ -37,8 +37,16 @@ io.on("connection", socket => {
         team
     });
     socket.on("playerDataOut", data => {
-        socket.broadcast.emit("playerDataIn", data)
+        socket.broadcast.emit("playerDataIn", data);
     })
+    socket.on("playerDeath", data => {
+        if (data.team === "red") {
+            red--;
+        } else if (data.team === "blue") {
+            blue--;
+        }
+        socket.broadcast.emit("removePlayer", data);
+    });
     socket.on("disconnect", () => {
         console.log("User disconnected!");
         if (team === "red") {

@@ -5,3 +5,13 @@ body {
 canvas {
     border: 2px solid black;
 }
+
+#health {
+    background-color: green;
+    border: 2px solid black;
+    width: 200px;
+    height: 30px;
+    float: right;
+    color: white;
+    padding-top: 12px;
+}

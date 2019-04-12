@@ -6,7 +6,7 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const galagaRed = document.querySelector("[src=\"/assets/galagaRed.png\"");
 const galagaBlue = document.querySelector("[src=\"/assets/galagaBlue.png\"");
-
+const HP = document.getElementById("health");
 let playerShip = Ship({
     ctx,
     canvas,
@@ -26,39 +26,59 @@ const keyCodes = {
     39: "right",
     32: "space"
 };
+let gameState = "play";
 let gameInterval = setInterval(() => {
     ctx.fillStyle = "Black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    playerShip.draw();
-    playerShip.move();
-    playerShip.iterateBullets();
-    playerShip.reduceCooldown();
-    if (keysPressed.left === true) {
-        playerShip.xVel -= 1;
-    } else if (keysPressed.right === true) {
-        playerShip.xVel += 1;
-    }
-    if (keysPressed.space === true) {
-        playerShip.addBullet();
-    }
-    playerShip.xVel *= 0.9;
-    //Some server side stuff mixed in with the client side stuff...
-    if (id) {
-        socket.emit("playerDataOut", {
-            id,
-            x: playerShip.x,
-            y: playerShip.y,
-            team: team,
-            bullets: playerShip.bullets,
-            cooldownWait: playerShip.cooldownWait
+    if (gameState === "play") {
+        playerShip.draw();
+        playerShip.move();
+        playerShip.iterateBullets();
+        playerShip.reduceCooldown();
+        if (keysPressed.left === true) {
+            playerShip.xVel -= 1;
+        } else if (keysPressed.right === true) {
+            playerShip.xVel += 1;
+        }
+        if (keysPressed.space === true) {
+            playerShip.addBullet();
+        }
+        playerShip.xVel *= 0.9;
+        //Some server side stuff mixed in with the client side stuff...
+        if (id) {
+            socket.emit("playerDataOut", {
+                id,
+                x: playerShip.x,
+                y: playerShip.y,
+                hp: playerShip.hp,
+                team: team,
+                bullets: playerShip.bullets,
+                cooldownWait: playerShip.cooldownWait
+            });
+        }
+        //Server-side rendering
+        Object.values(globalPlayers).forEach(player => {
+            player.draw();
+            player.iterateBullets();
+            playerShip.cc(player.bullets);
         });
+        HP.style.width = (playerShip.hp * 2) + "px";
+        if (playerShip.hp < 2) {
+            socket.emit("playerDeath", {
+                id,
+                team
+            })
+            gameState = "over"
+        }
+    } else if (gameState === "over") {
+        ctx.fillStyle = "White";
+        ctx.textAlign = "center";
+        ctx.font = "60px Courier";
+        ctx.fillText("YOU GOT BLOWN UP!", canvas.width / 2, canvas.height / 2);
+        ctx.font = "20px Courier";
+        ctx.fillText("It happens to everyone eventually...", canvas.width / 2, canvas.height * 0.6);
+        ctx.fillText("Reload the page to play again!", canvas.width / 2, canvas.height * 0.7);
     }
-    //Server-side rendering
-    Object.values(globalPlayers).forEach(player => {
-        player.draw();
-        console.log(player.bullets);
-        player.iterateBullets();
-    })
 }, 30);
 
 window.addEventListener("keydown", e => {
@@ -77,6 +97,7 @@ socket.on("playerDataIn", ({
     id,
     x,
     y,
+    hp,
     team,
     bullets,
     cooldownWait
@@ -88,9 +109,10 @@ socket.on("playerDataIn", ({
             img: (team === "blue") ? galagaBlue : galagaRed,
             x,
             y,
+            hp,
             cooldownWait
         });
-        globalPlayers[id].bullets = bullets.map(bullet => Bullet({
+        globalPlayers[id].bullets = bullets.filter(bullet => !!bullet).map(bullet => Bullet({
             ctx,
             canvas,
             x: bullet.x,
@@ -101,7 +123,8 @@ socket.on("playerDataIn", ({
     } else {
         globalPlayers[id].x = x;
         globalPlayers[id].y = y;
-        globalPlayers[id].bullets = bullets.map(bullet => Bullet({
+        globalPlayers[id].hp = hp;
+        globalPlayers[id].bullets = bullets.filter(bullet => !!bullet).map(bullet => Bullet({
             ctx,
             canvas,
             x: bullet.x,

@@ -7,12 +7,15 @@ function Ship({
     canvas,
     x,
     y,
+    hp,
     img,
     cooldownWait
 }) {
     let xVel = 0;
     let bullets = [];
     let cooldown = 0;
+    if (!hp) hp = 100;
+    let antiTeam = (img === galagaRed) ? "blue" : "red";
     return {
         get x() {
             return x;
@@ -22,6 +25,20 @@ function Ship({
         },
         get cooldownWait() {
             return cooldownWait;
+        },
+        get hp() {
+            return hp;
+        },
+        set hp(val) {
+            hp = val;
+        },
+        get antiTeam() {
+            return antiTeam;
+        },
+        reduceHp(val) {
+            if (val <= 100 && hp > 1) {
+                hp -= val;
+            }
         },
         set x(val) {
             if (typeof val === "number" && Number.isFinite(val)) {
@@ -55,9 +72,11 @@ function Ship({
         },
         draw() {
             ctx.drawImage(img, x, y);
+            ctx.fillStyle = "green";
+            ctx.fillRect(x + ((img !== galagaRed) ? 0 : 0), y + ((img === galagaRed) ? img.height * 0.8 : 0), (hp / 100) * img.width, 10)
         },
         get bullets() {
-            return bullets.map(bullet => ({ x: bullet.x, y: bullet.y }));
+            return bullets.map(bullet => ({ x: bullet.x, y: bullet.y, team: (img === galagaRed) ? "red" : "blue" }));
         },
         set bullets(arr) {
             if (Array.isArray(arr)) {
@@ -77,6 +96,7 @@ function Ship({
             if (team === "blue") {
                 spec.color = "blue";
                 spec.dir = "down";
+                spec.y = y + img.height;
             }
             if (cooldown < 1) {
                 bullets.push(Bullet(spec));
@@ -84,13 +104,27 @@ function Ship({
             }
         },
         iterateBullets() {
-            bullets.forEach(bullet => {
+            bullets.forEach((bullet, index) => {
                 bullet.draw();
                 bullet.move();
+                if (bullet.y < 0 || bullet.y > canvas.width) {
+                    delete bullets[index];
+                }
             });
         },
         reduceCooldown() {
             cooldown -= 1;
+        },
+        cc(bullets) {
+            bullets.forEach(bullet => {
+                console.log((bullet.x >= x && bullet.y >= y && bullet.x <= x + img.width &&
+                    bullet.y <= y + img.width) ? "yay" : undefined);
+                if (bullet.x >= x && bullet.y >= y && bullet.x <= x + img.width &&
+                    bullet.y <= y + img.width && bullet.team === antiTeam) {
+                    console.log("boom!");
+                    this.reduceHp(1);
+                }
+            });
         }
     }
 }
