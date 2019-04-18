@@ -53,7 +53,7 @@ let gameInterval = setInterval(() => {
                 hp: playerShip.hp,
                 team: team,
                 bullets: playerShip.bullets,
-                cooldownWait: playerShip.cooldownWait
+                cooldownWait: playerShip.cooldownWait,
             });
         }
         //Server-side rendering
@@ -120,6 +120,7 @@ socket.on("playerDataIn", ({
             color: (team === "red") ? "red" : "blue",
             dir: (team === "red") ? "up" : "down"
         }));
+        globalPlayers[id].alive = true;
     } else {
         globalPlayers[id].x = x;
         globalPlayers[id].y = y;
@@ -132,6 +133,7 @@ socket.on("playerDataIn", ({
             color: (team === "red") ? "red" : "blue",
             dir: (team === "red") ? "up" : "down"
         }));
+        globalPlayers[id].alive = true;
     }
 })
 
@@ -155,3 +157,18 @@ socket.on("removePlayer", ({
 }) => {
     delete globalPlayers[id];
 });
+let tick = 0;
+let garbageInterval = setInterval(() => {
+    if (tick % 2 === 0) {
+        Object.keys(globalPlayers).forEach(key => {
+            globalPlayers[key].alive = false;
+        })
+    } else {
+        Object.keys(globalPlayers).forEach(key => {
+            if (globalPlayers[key].alive === false) {
+                delete globalPlayers[key];
+            }
+        });
+    }
+    tick += 1;
+}, 1000);

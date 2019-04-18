@@ -38,7 +38,7 @@ io.on("connection", socket => {
     });
     socket.on("playerDataOut", data => {
         socket.broadcast.emit("playerDataIn", data);
-    })
+    });
     socket.on("playerDeath", data => {
         if (data.team === "red") {
             red--;
@@ -47,6 +47,7 @@ io.on("connection", socket => {
         }
         socket.broadcast.emit("removePlayer", data);
     });
+    /*
     socket.on("disconnect", () => {
         console.log("User disconnected!");
         if (team === "red") {
@@ -57,7 +58,8 @@ io.on("connection", socket => {
         socket.broadcast.emit("removePlayer", {
             id
         })
-    })
+    });
+    */
 });
 server.listen(port, () => {
     console.log(`Server is up on port ${port}`);
