@@ -32,7 +32,7 @@ let gameInterval = setInterval(() => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (gameState === "play") {
         playerShip.draw();
-        ctx.fillStyle = "gray";
+        ctx.fillStyle = "white";
         ctx.font = "20px Courier";
         ctx.textAlign = "center";
         if (team === "red") {
