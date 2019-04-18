@@ -32,6 +32,14 @@ let gameInterval = setInterval(() => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (gameState === "play") {
         playerShip.draw();
+        ctx.fillStyle = "gray";
+        ctx.font = "20px Courier";
+        ctx.textAlign = "center";
+        if (team === "red") {
+            ctx.fillText(name, playerShip.x + galagaRed.width / 2, playerShip.y - galagaRed.height / 2);
+        } else {
+            ctx.fillText(name, playerShip.x + galagaRed.width / 2, playerShip.y + galagaBlue.height * 1.5);
+        }
         playerShip.move();
         playerShip.iterateBullets();
         playerShip.reduceCooldown();
@@ -51,14 +59,21 @@ let gameInterval = setInterval(() => {
                 x: playerShip.x,
                 y: playerShip.y,
                 hp: playerShip.hp,
-                team: team,
+                team,
                 bullets: playerShip.bullets,
                 cooldownWait: playerShip.cooldownWait,
+                name
             });
         }
         //Server-side rendering
         Object.values(globalPlayers).forEach(player => {
             player.draw();
+            ctx.fillStyle = "white";
+            if (player.team === "red") {
+                ctx.fillText(player.name, player.x + galagaRed.width / 2, player.y - galagaRed.height / 2);
+            } else {
+                ctx.fillText(player.name, player.x + galagaRed.width / 2, player.y + galagaBlue.height * 1.5);
+            }
             player.iterateBullets();
             playerShip.cc(player.bullets);
         });
@@ -100,7 +115,8 @@ socket.on("playerDataIn", ({
     hp,
     team,
     bullets,
-    cooldownWait
+    cooldownWait,
+    name
 }) => {
     if (!globalPlayers[id]) {
         globalPlayers[id] = Ship({
@@ -120,7 +136,9 @@ socket.on("playerDataIn", ({
             color: (team === "red") ? "red" : "blue",
             dir: (team === "red") ? "up" : "down"
         }));
+        globalPlayers[id].team = team;
         globalPlayers[id].alive = true;
+        globalPlayers[id].name = name;
     } else {
         globalPlayers[id].x = x;
         globalPlayers[id].y = y;
@@ -172,3 +190,5 @@ let garbageInterval = setInterval(() => {
     }
     tick += 1;
 }, 1000);
+
+name = prompt("Enter a nickname: ");
